@@ -6,6 +6,7 @@ import DateRangeSelector from './components/DateRangeSelector';
 import ParametersSelector from './components/ParametersSelector';
 import DescriptionInput from './components/DescriptionInput';
 import PlaylistDisplay from './components/PlaylistDisplay';
+import TidalLogin from './components/TidalLogin';
 
 const steps = [
   { id: 'genres', title: 'Select Your Genres' },
@@ -125,6 +126,9 @@ export default function Home() {
     <main className="min-h-screen bg-gray-900 text-white p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-8 text-center">AI Playlist Generator</h1>
+        
+        {/* Tidal Authentication */}
+        <TidalLogin />
         
         <div className="bg-gray-800 rounded-lg p-6 mb-8">
           <div className="flex justify-between mb-8">

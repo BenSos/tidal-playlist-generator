@@ -13,7 +13,7 @@ interface PlaylistPreviewProps {
   isSaving: boolean;
 }
 
-export default function PlaylistPreview({ playlist, onSave, isSaving }: PlaylistPreviewProps) {
+export default function PlaylistPreview({ playlist }: PlaylistPreviewProps) {
   const [showAll, setShowAll] = useState(false);
   const displayedTracks = showAll ? playlist : playlist.slice(0, 5);
 
@@ -57,27 +57,6 @@ export default function PlaylistPreview({ playlist, onSave, isSaving }: Playlist
             {showAll ? 'Show Less' : `Show ${playlist.length - 5} More Tracks`}
           </button>
         )}
-      </div>
-
-      <div className="flex flex-col space-y-4">
-        <button
-          onClick={onSave}
-          disabled={isSaving}
-          className="w-full p-4 bg-purple-600 hover:bg-purple-700 rounded-lg text-white disabled:opacity-50 flex items-center justify-center space-x-2"
-        >
-          {isSaving ? (
-            <>
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              <span>Saving to Tidal...</span>
-            </>
-          ) : (
-            <span>Save to Tidal</span>
-          )}
-        </button>
-
-        <p className="text-sm text-center text-gray-400">
-          Your playlist will be saved to your Tidal account
-        </p>
       </div>
     </div>
   );

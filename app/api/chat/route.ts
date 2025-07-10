@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 if (!process.env.PERPLEXITY_API_KEY) {
   throw new Error('PERPLEXITY_API_KEY is not defined in environment variables');
@@ -7,7 +8,7 @@ if (!process.env.PERPLEXITY_API_KEY) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { prompt } = body;
+    const { prompt, createTidalPlaylist = false, playlistTitle = 'AI Generated Playlist' } = body;
     console.log('Received request body:', body);
 
     if (!prompt) {
@@ -17,6 +18,11 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
+    // Check if user is authenticated with Tidal
+    const cookieStore = await cookies();
+    const tidalAccessToken = cookieStore.get('tidal_access_token')?.value;
+    const tidalUserId = cookieStore.get('tidal_user_id')?.value;
 
     // Make request to Perplexity API
     console.log('Making request to Perplexity API with prompt:', prompt);
@@ -74,7 +80,45 @@ export async function POST(req: Request) {
       .map((line: string) => line.replace(/^\d+\.\s*/, '').trim())
       .join('\n');
 
-    return NextResponse.json({ playlist });
+    let tidalPlaylistId = null;
+
+    // Create Tidal playlist if requested and user is authenticated
+    if (createTidalPlaylist && tidalAccessToken && tidalUserId) {
+      try {
+        // Create the playlist
+        const playlistResponse = await fetch('https://api.tidal.com/v1/users/' + tidalUserId + '/playlists', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${tidalAccessToken}`,
+            'Content-Type': 'application/vnd.tidal.v1+json',
+          },
+          body: JSON.stringify({
+            title: playlistTitle,
+            description: `AI-generated playlist: ${prompt}`,
+            picture: null,
+          }),
+        });
+
+        if (playlistResponse.ok) {
+          const playlistData = await playlistResponse.json();
+          tidalPlaylistId = playlistData.uuid;
+          
+          // Note: In a real implementation, you would need to search for the actual tracks
+          // and add them to the playlist. This is a simplified example.
+          console.log('Created Tidal playlist:', tidalPlaylistId);
+        } else {
+          console.error('Failed to create Tidal playlist:', await playlistResponse.text());
+        }
+      } catch (error) {
+        console.error('Error creating Tidal playlist:', error);
+      }
+    }
+
+    return NextResponse.json({ 
+      playlist,
+      tidalPlaylistId,
+      tidalConnected: !!tidalAccessToken
+    });
   } catch (error) {
     console.error('Error:', error);
     return NextResponse.json(
